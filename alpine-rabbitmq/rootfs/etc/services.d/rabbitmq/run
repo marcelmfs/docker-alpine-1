@@ -1,0 +1,3 @@
+#!/usr/bin/with-contenv sh
+
+exec su -c /usr/local/rabbitmq/sbin/rabbitmq-server rabbitmq

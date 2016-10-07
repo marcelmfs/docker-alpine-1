@@ -1,30 +1,34 @@
 FROM bhuisgen/alpine-base:latest
 MAINTAINER Boris HUISGEN <bhuisgen@hbis.fr>
 
-ENV CONSUL_VERSION=0.6.4 \
-    CONSULUI_VERSION=0.6.4 \
+ENV CONSUL_VERSION=0.7.0 \
+    CONSULUI_VERSION=0.7.0 \
+    CONSULTEMPLATE_VERSION=0.15.0 \
     GOMAXPROCS=2
 
-RUN apk add --update curl jq zip && \
-    curl -sSL https://releases.hashicorp.com/consul/${CONSULUI_VERSION}/consul_${CONSULUI_VERSION}_linux_amd64.zip -o /bin/consul.zip && \
-    cd /bin && \
-    unzip consul.zip && \
-    mkdir -p /var/consul && \
+RUN mkdir -p /var/lib/consul && \
     addgroup consul && \
-    adduser -D -G consul -s /sbin/nologin -h /var/consul consul && \
-    rm /bin/consul.zip && \
-    mkdir -p /var/consul/ui && \
-    curl -sSL https://releases.hashicorp.com/consul/${CONSULUI_VERSION}/consul_${CONSULUI_VERSION}_web_ui.zip -o /var/consul/ui/consul_web_ui.zip && \
-    cd /var/consul/ui && \
-    unzip consul_web_ui.zip && \
-    chown -R consul:consul /var/consul/ui && \
-    rm consul_web_ui.zip && \
+    adduser -S -D -g "" -G consul -s /sbin/nologin -h /var/lib/consul consul && \
+    chown -R consul:consul /var/lib/consul
+
+RUN apk add --update zip && \
+    curl -sSL https://releases.hashicorp.com/consul/${CONSULUI_VERSION}/consul_${CONSULUI_VERSION}_linux_amd64.zip -o /tmp/consul.zip && \
+    unzip /tmp/consul.zip -d /bin && \
+    rm /tmp/consul.zip && \
+    mkdir -p /var/lib/consului && \
+    curl -sSL https://releases.hashicorp.com/consul/${CONSULUI_VERSION}/consul_${CONSULUI_VERSION}_web_ui.zip -o /tmp/consului.zip && \
+    unzip /tmp/consului.zip -d /var/lib/consului && \
+    rm /tmp/consului.zip && \
+    curl -sSL https://releases.hashicorp.com/consul-template/${CONSULTEMPLATE_VERSION}/consul-template_${CONSULTEMPLATE_VERSION}_linux_amd64.zip -o /tmp/consul-template.zip && \
+    unzip /tmp/consul-template.zip -d /bin && \
+    rm /tmp/consul-template.zip && \
     apk del zip && \
     rm -rf /var/cache/apk/*
 
-COPY root /
+COPY rootfs/ /
 
 ENTRYPOINT ["/init"]
 CMD []
 
-EXPOSE 8300/tcp 8301/tcp 8301/udp 8302/tcp 8302/udp 8400/tcp 8500/tcp 8600/tcp 8600/udp
+EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8501 8600 8600/udp
+VOLUME ["/var/lib/consul"]

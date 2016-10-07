@@ -3,6 +3,8 @@ version: '2'
 services:
     consul:
         image: bhuisgen/alpine-consul
+        ports:
+            - "8500:8500"
         environment:
             - CONSUL_OPTIONS=-server -bootstrap-expect=1 -client 0.0.0.0 -ui    # minimal server options
 
@@ -15,9 +17,12 @@ services:
         network_mode: host
         environment:
             - CONSUL_AGENT=consul                   # consul agent hostname/IP
+            #- CONSUL_PORT=8500                     # consul agent port
+            #- CONSUL_KEYPREFIX=path/prefix         # consul key prefix path
             - CONSUL_SERVICENAME=dnsmasq            # consul service name
             - CONSUL_SERVICETAGS=dev                # consul service tag
             - CONSUL_SERVICEPORT=53                 # consul service port
+            - CONSUL_CHECKTYPE=tcp                  # consul health check type
             - DNSMASQ_NORESOLV=1                    # read /etc/resolv.conf
             - DNSMASQ_INTERFACE=wlan0               # listen interface
             - DNSMASQ_LISTENADDRESS=192.168.100.1   # listen IP

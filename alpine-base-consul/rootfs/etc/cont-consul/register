@@ -1,0 +1,30 @@
+#!/usr/bin/with-contenv sh
+
+options=""
+url="http://${CONSUL_AGENT}:${CONSUL_PORT}"
+params=""
+
+if [ ! -z ${CONSUL_TLS} ] && [ ${CONSUL_TLS} -eq 1 ]; then
+    options="${options} --insecure --cacert /etc/consul.d/ssl/ca.pem --cert /etc/consul.d/ssl/client.pem --key /etc/consul.d/ssl/client-priv-key.pem"
+    url="https://${CONSUL_AGENT}:${CONSUL_PORT}"
+fi
+
+if [ ! -z ${CONSUL_TOKEN} ]; then
+    params="?token=${CONSUL_TOKEN}"
+fi
+
+if [ -d /etc/cont-consul/services.d/ ]; then
+    for file in /etc/cont-consul/services.d/*.json; do
+        [ -f $file ] || continue
+
+        curl -sSL ${options} -X PUT -d "@${file}" "${url}/v1/agent/service/register${params}"
+    done
+fi
+
+if [ -d /etc/cont-consul/checks.d/ ]; then
+    for file in /etc/cont-consul/checks.d/*.json; do
+        [ -f $file ] || continue
+
+        curl -sSL ${options} -X PUT -d "@${file}" "${url}/v1/agent/check/register${params}"
+    done
+fi
